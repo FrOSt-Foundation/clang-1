@@ -755,6 +755,7 @@ CGRecordLayout *CodeGenTypes::ComputeRecordLayout(const RecordDecl *D,
   llvm::StructType *ST =
     dyn_cast<llvm::StructType>(RL->getLLVMType());
   const llvm::StructLayout *SL = getDataLayout().getStructLayout(ST);
+  const llvm::DataLayout DL = getDataLayout();
 
   const ASTRecordLayout &AST_RL = getContext().getASTRecordLayout(D);
   RecordDecl::field_iterator it = D->field_begin();
@@ -765,7 +766,7 @@ CGRecordLayout *CodeGenTypes::ComputeRecordLayout(const RecordDecl *D,
     // AST offset.
     if (!FD->isBitField()) {
       unsigned FieldNo = RL->getLLVMFieldNo(FD);
-      assert(AST_RL.getFieldOffset(i) == SL->getElementOffsetInBits(FieldNo) &&
+      assert(AST_RL.getFieldOffset(i) == DL.inBits(SL->getElementOffset(FieldNo)) &&
              "Invalid field offset!");
       continue;
     }
@@ -796,7 +797,7 @@ CGRecordLayout *CodeGenTypes::ComputeRecordLayout(const RecordDecl *D,
       else
         assert(Info.Offset == 0 &&
                "Little endian union bitfield with a non-zero offset");
-      assert(Info.StorageSize <= SL->getSizeInBits() &&
+      assert(Info.StorageSize <= DL.inBits(SL->getSizeInBytes()) &&
              "Union not large enough for bitfield storage");
     } else {
       assert(Info.StorageSize ==

@@ -1141,6 +1141,7 @@ bool ConstStructBuilder::Build(ConstExprEmitter *Emitter,
   const ASTRecordLayout &Layout = CGM.getContext().getASTRecordLayout(RD);
   const llvm::StructLayout *BaseLayout = CGM.getDataLayout().getStructLayout(
                                            Base->getType());
+  const llvm::DataLayout DataLayout = CGM.getDataLayout();
   unsigned FieldNo = -1;
   unsigned ElementNo = 0;
 
@@ -1167,7 +1168,7 @@ bool ConstStructBuilder::Build(ConstExprEmitter *Emitter,
     // as the type of the InitListExpr.
     if (CGM.getTypes().ConvertType(Field->getType()) != EltInit->getType() ||
         Layout.getFieldOffset(ElementNo) !=
-          BaseLayout->getElementOffsetInBits(ElementNo))
+          DataLayout.inBits(BaseLayout->getElementOffset(ElementNo)))
       return false;
 
     // Get the initializer. If we encounter an empty field or a NoInitExpr,

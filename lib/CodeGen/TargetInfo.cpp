@@ -7473,7 +7473,7 @@ private:
       const llvm::StructLayout *Layout = DL.getStructLayout(StrTy);
       for (unsigned i = 0, e = StrTy->getNumElements(); i != e; ++i) {
         llvm::Type *ElemTy = StrTy->getElementType(i);
-        uint64_t ElemOffset = Offset + Layout->getElementOffsetInBits(i);
+        uint64_t ElemOffset = Offset + DL.inBits(Layout->getElementOffset(i));
         switch (ElemTy->getTypeID()) {
         case llvm::Type::StructTyID:
           addStruct(ElemOffset, cast<llvm::StructType>(ElemTy));

@@ -3539,26 +3539,28 @@ void CGDebugInfo::EmitDeclareOfBlockLiteralArgVariable(const CGBlockInfo &block,
   const llvm::StructLayout *blockLayout =
       CGM.getDataLayout().getStructLayout(block.StructureType);
 
+  const llvm::DataLayout dataLayout = CGM.getDataLayout();
+
   SmallVector<llvm::Metadata *, 16> fields;
   fields.push_back(createFieldType("__isa", C.VoidPtrTy, loc, AS_public,
-                                   blockLayout->getElementOffsetInBits(0),
+                                   dataLayout.inBits(blockLayout->getElementOffset(0)),
                                    tunit, tunit));
   fields.push_back(createFieldType("__flags", C.IntTy, loc, AS_public,
-                                   blockLayout->getElementOffsetInBits(1),
+                                   dataLayout.inBits(blockLayout->getElementOffset(1)),
                                    tunit, tunit));
   fields.push_back(createFieldType("__reserved", C.IntTy, loc, AS_public,
-                                   blockLayout->getElementOffsetInBits(2),
+                                   dataLayout.inBits(blockLayout->getElementOffset(2)),
                                    tunit, tunit));
   auto *FnTy = block.getBlockExpr()->getFunctionType();
   auto FnPtrType = CGM.getContext().getPointerType(FnTy->desugar());
   fields.push_back(createFieldType("__FuncPtr", FnPtrType, loc, AS_public,
-                                   blockLayout->getElementOffsetInBits(3),
+                                   dataLayout.inBits(blockLayout->getElementOffset(3)),
                                    tunit, tunit));
   fields.push_back(createFieldType(
       "__descriptor", C.getPointerType(block.NeedsCopyDispose
                                            ? C.getBlockDescriptorExtendedType()
                                            : C.getBlockDescriptorType()),
-      loc, AS_public, blockLayout->getElementOffsetInBits(4), tunit, tunit));
+      loc, AS_public, dataLayout.inBits(blockLayout->getElementOffset(4)), tunit, tunit));
 
   // We want to sort the captures by offset, not because DWARF
   // requires this, but because we're paranoid about debuggers.
@@ -3568,7 +3570,7 @@ void CGDebugInfo::EmitDeclareOfBlockLiteralArgVariable(const CGBlockInfo &block,
   if (blockDecl->capturesCXXThis()) {
     BlockLayoutChunk chunk;
     chunk.OffsetInBits =
-        blockLayout->getElementOffsetInBits(block.CXXThisIndex);
+        blockLayout->getElementOffset(block.CXXThisIndex);
     chunk.Capture = nullptr;
     chunks.push_back(chunk);
   }
@@ -3584,7 +3586,7 @@ void CGDebugInfo::EmitDeclareOfBlockLiteralArgVariable(const CGBlockInfo &block,
 
     BlockLayoutChunk chunk;
     chunk.OffsetInBits =
-        blockLayout->getElementOffsetInBits(captureInfo.getIndex());
+        dataLayout.inBits(blockLayout->getElementOffset(captureInfo.getIndex()));
     chunk.Capture = &capture;
     chunks.push_back(chunk);
   }
